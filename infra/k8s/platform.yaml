@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: fraudstream-api}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: fraudstream-api}}
+  template:
+    metadata: {labels: {app: fraudstream-api}}
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/nawyaunnam/fraudstream-api:latest
+          ports: [{containerPort: 8000}]
+          envFrom: [{secretRef: {name: fraudstream-secrets}}]
+          readinessProbe: {httpGet: {path: /health, port: 8000}, initialDelaySeconds: 5}
+          livenessProbe: {httpGet: {path: /health, port: 8000}, initialDelaySeconds: 20}
+          resources: {requests: {cpu: 100m, memory: 192Mi}, limits: {cpu: 1, memory: 512Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: fraudstream-api}
+spec: {selector: {app: fraudstream-api}, ports: [{port: 80, targetPort: 8000}]}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: fraudstream-worker}
+spec:
+  replicas: 3
+  selector: {matchLabels: {app: fraudstream-worker}}
+  template:
+    metadata: {labels: {app: fraudstream-worker}}
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/nawyaunnam/fraudstream-worker:latest
+          command: ["python", "-m", "app.worker"]
+          envFrom: [{secretRef: {name: fraudstream-secrets}}]
+          resources: {requests: {cpu: 250m, memory: 384Mi}, limits: {cpu: 2, memory: 1Gi}}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: {name: fraudstream-worker}
+spec:
+  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: fraudstream-worker}
+  minReplicas: 3
+  maxReplicas: 30
+  metrics:
+    - type: Resource
+      resource: {name: cpu, target: {type: Utilization, averageUtilization: 65}}
+

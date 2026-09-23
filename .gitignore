@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+*.db
+*.egg-info/
+node_modules/
+dist/
+models/*.joblib
+!models/.gitkeep

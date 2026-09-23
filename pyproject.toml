@@ -1,0 +1,35 @@
+[project]
+name = "fraudstream"
+version = "0.1.0"
+description = "Real-time fraud detection reference platform"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115,<1", "uvicorn[standard]>=0.30,<1", "sqlalchemy>=2.0,<3",
+  "psycopg[binary]>=3.2,<4", "redis>=5,<7", "confluent-kafka>=2.5,<3",
+  "pydantic-settings>=2.5,<3", "python-jose[cryptography]>=3.3,<4",
+  "passlib[bcrypt]>=1.7,<2", "python-multipart>=0.0.9,<1",
+  "numpy>=1.26,<3", "scikit-learn>=1.5,<2", "xgboost>=2.1,<4",
+  "joblib>=1.4,<2", "prometheus-client>=0.21,<1", "httpx>=0.27,<1"
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["backend"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "ruff>=0.6,<1"]
+
+[tool.pytest.ini_options]
+pythonpath = ["backend"]
+testpaths = ["backend/tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["E501", "B008"]
