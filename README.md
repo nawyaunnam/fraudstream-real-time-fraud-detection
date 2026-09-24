@@ -1,6 +1,6 @@
 # FraudStream
 
-FraudStream is a production-oriented reference system for making fraud decisions on a live payment stream. It turns synthetic transaction events into point-in-time customer features, combines an explainable rules engine with an XGBoost classifier, records every decision, and streams high-risk payments to an analyst dashboard.
+FraudStream is a streaming reference implementation for making fraud decisions on a live payment stream. It turns synthetic transaction events into point-in-time customer features, combines an explainable rules engine with an XGBoost classifier, records every decision, and streams high-risk payments to an analyst dashboard.
 
 ![CI](https://github.com/nawyaunnam/fraudstream-real-time-fraud-detection/actions/workflows/ci.yml/badge.svg)
 
@@ -21,6 +21,12 @@ flowchart LR
     D -->|fraud-decisions| K
     W -->|poison events| DLQ[Dead-letter topic]
 ```
+
+## Current validation boundary
+
+Transactions and training labels are synthetic. The default scorer uses a deterministic fallback when no trained model artifact exists; XGBoost training is a separate step.
+
+The [Redis feature pipeline](backend/app/features.py) reads and updates state in separate transactions, and the [worker](backend/app/worker.py) updates features before persisting a decision. Concurrent processing and replay can therefore affect feature history. These paths need atomic updates, replay protection, and failure tests before production use. No throughput or live fraud-reduction result is claimed.
 
 ## What it demonstrates
 
